@@ -26,6 +26,7 @@ jobs:
           IG_PASSWORD: ${{ secrets.IG_PASSWORD }}
           IG_ENV: demo
           IG_ACCOUNT_ID: ${{ secrets.IG_ACCOUNT_ID }}
+          IG_EPIC: IX.D.NASDAQ.CASH.IP
           STAKE_PER_POINT: ${{ vars.STAKE_PER_POINT || '1' }}
       - name: Save state + logs
         run: |
