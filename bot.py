@@ -56,9 +56,16 @@ class IG:
         self.size = float(os.getenv("STAKE_PER_POINT", "1"))
         key = os.environ["IG_API_KEY"]
         base_h = {"X-IG-API-KEY": key, "Content-Type": "application/json", "Accept": "application/json; charset=UTF-8"}
-        _, h = http(self.base + "/session", "POST", {**base_h, "Version": "2"},
-                    {"identifier": os.environ["IG_USERNAME"], "password": os.environ["IG_PASSWORD"]})
+        sess, h = http(self.base + "/session", "POST", {**base_h, "Version": "2"},
+                       {"identifier": os.environ["IG_USERNAME"], "password": os.environ["IG_PASSWORD"]})
         self.h = {**base_h, "CST": h.get("CST"), "X-SECURITY-TOKEN": h.get("X-SECURITY-TOKEN")}
+        acct = os.getenv("IG_ACCOUNT_ID")                              # spread-bet account, not CFD
+        if acct and sess.get("currentAccountId") != acct:
+            _, h2 = http(self.base + "/session", "PUT", {**self.h, "Version": "1"},
+                         {"accountId": acct, "defaultAccount": False})
+            if h2.get("X-SECURITY-TOKEN"): self.h["X-SECURITY-TOKEN"] = h2.get("X-SECURITY-TOKEN")
+        elif not acct:
+            print("WARNING: IG_ACCOUNT_ID not set — trading whatever account IG defaults to")
     def _confirm(self, ref):
         for _ in range(10):
             try:
