@@ -1,0 +1,34 @@
+name: ndx-ibs-bot
+on:
+  schedule:
+    - cron: "45 18 * * 1-5"
+    - cron: "45 19 * * 1-5"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ndx-ibs-bot
+  cancel-in-progress: false
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Run bot
+        run: python bot.py
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+          IG_API_KEY: ${{ secrets.IG_API_KEY }}
+          IG_USERNAME: ${{ secrets.IG_USERNAME }}
+          IG_PASSWORD: ${{ secrets.IG_PASSWORD }}
+          IG_ENV: demo
+          STAKE_PER_POINT: ${{ vars.STAKE_PER_POINT || '1' }}
+      - name: Save state + logs
+        run: |
+          git config user.name "ndx-bot"; git config user.email "ndx-bot@users.noreply.github.com"
+          git add -A state.json trades.csv daily_log.csv 2>/dev/null || true
+          git commit -m "bot run $(date -u +%F)" || echo "nothing to commit"
+          git push
